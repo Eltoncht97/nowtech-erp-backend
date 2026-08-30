@@ -51,7 +51,7 @@ model Membership {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([userId, organizationId])
+  @@unique([organizationId, userId])
 }
 
 model Branch {
@@ -65,5 +65,5 @@ model Branch {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([name, organizationId])
+  @@unique([organizationId, name])
 }
