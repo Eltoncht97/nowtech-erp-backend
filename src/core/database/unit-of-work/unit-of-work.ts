@@ -1,4 +1,4 @@
-import { UnitOfWorkRepositories } from '../types/unit-of-work-repositories.type';
+import { UnitOfWorkRepositories } from './unit-of-work-repositories.type';
 
 export abstract class UnitOfWork {
   abstract execute<T>(

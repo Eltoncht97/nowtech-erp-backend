@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UnitOfWork } from './unit-of-work';
 import { PrismaService } from '../prisma.service';
-import { UnitOfWorkRepositories } from '../types/unit-of-work-repositories.type';
+import { UnitOfWorkRepositories } from './unit-of-work-repositories.type';
 import { PrismaOrganizationRepository } from 'src/modules/organizations/repositories/prisma-organization.repository';
 import { PrismaMembershipRepository } from 'src/modules/memberships/repositories/prisma-membership.repository';
 
