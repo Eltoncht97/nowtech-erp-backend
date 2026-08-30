@@ -6,3 +6,61 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id           String @id @default(uuid())
+  name         String
+  email        String @unique
+  passwordHash String
+
+  memberships Membership[]
+
+  createdAt DateTime
+  updatedAt DateTime
+}
+
+model Organization {
+  id   String @id @default(uuid())
+  name String
+  slug String @unique
+
+  memberships Membership[]
+  branches    Branch[]
+
+  createdAt DateTime
+  updatedAt DateTime
+}
+
+enum MembershipStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Membership {
+  id String @id @default(uuid())
+
+  userId         String
+  organizationId String
+
+  user         User         @relation(fields: [userId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  status MembershipStatus
+
+  createdAt DateTime
+  updatedAt DateTime
+
+  @@unique([userId, organizationId])
+}
+
+model Branch {
+  id String @id @default(uuid())
+
+  name           String @unique
+  organizationId String
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  createdAt DateTime
+  updatedAt DateTime
+}
