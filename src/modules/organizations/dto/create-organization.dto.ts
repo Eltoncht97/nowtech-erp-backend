@@ -1,6 +1,7 @@
 import {
   IsNotEmpty,
   IsString,
+  IsUUID,
   Matches,
   MaxLength,
   MinLength,
@@ -20,4 +21,7 @@ export class CreateOrganizationDto {
     message: 'slug must contain only lowercase letters, numbers and hyphens',
   })
   slug!: string;
+
+  @IsUUID()
+  userId!: string;
 }

@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma.service';
 import { UnitOfWorkRepositories } from './unit-of-work-repositories.type';
 import { PrismaOrganizationRepository } from 'src/modules/organizations/repositories/prisma-organization.repository';
 import { PrismaMembershipRepository } from 'src/modules/memberships/repositories/prisma-membership.repository';
+import { PrismaUserRepository } from 'src/modules/users/repositories/prisma-user.repository';
 
 @Injectable()
 export class PrismaUnitOfWork extends UnitOfWork {
@@ -19,6 +20,8 @@ export class PrismaUnitOfWork extends UnitOfWork {
         organizations: new PrismaOrganizationRepository(tx),
 
         memberships: new PrismaMembershipRepository(tx),
+
+        users: new PrismaUserRepository(tx),
       };
 
       return work(repositories);
