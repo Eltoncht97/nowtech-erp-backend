@@ -4,4 +4,5 @@ import { CreateOrganizationData } from './types/create-organization-data.type';
 export abstract class OrganizationRepository {
   abstract findBySlug(slug: string): Promise<Organization | null>;
   abstract create(data: CreateOrganizationData): Promise<Organization>;
+  abstract findById(id: string): Promise<Organization | null>;
 }

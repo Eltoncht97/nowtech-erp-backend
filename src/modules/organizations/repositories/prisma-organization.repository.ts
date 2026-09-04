@@ -15,4 +15,8 @@ export class PrismaOrganizationRepository extends OrganizationRepository {
   create(data: CreateOrganizationData): Promise<Organization> {
     return this.client.organization.create({ data });
   }
+
+  findById(id: string): Promise<Organization | null> {
+    return this.client.organization.findUnique({ where: { id } });
+  }
 }

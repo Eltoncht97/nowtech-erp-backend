@@ -5,6 +5,7 @@ import { HealthModule } from './modules/health/health.module';
 import { envValidationSchema } from './core/config/env.validation';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { UsersModule } from './modules/users/users.module';
+import { BranchesModule } from './modules/branches/branches.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { UsersModule } from './modules/users/users.module';
     HealthModule,
     OrganizationsModule,
     UsersModule,
+    BranchesModule,
   ],
 })
 export class AppModule {}
