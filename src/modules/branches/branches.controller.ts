@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post } from '@nestjs/common';
+import { Body, Controller, Param, ParseUUIDPipe, Post } from '@nestjs/common';
 import { BranchesService } from './branches.service';
 import { CreateBranchDto } from './dto/create-branch.dto';
 
@@ -8,7 +8,7 @@ export class BranchesController {
 
   @Post()
   create(
-    @Param('organizationId') organizationId: string,
+    @Param('organizationId', ParseUUIDPipe) organizationId: string,
     @Body() dto: CreateBranchDto,
   ) {
     return this.branchesService.create(organizationId, dto);
