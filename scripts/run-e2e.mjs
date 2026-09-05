@@ -1,6 +1,12 @@
 import { spawnSync } from 'node:child_process';
 
-const composeArgs = ['compose', '-f', 'docker-compose.test.yml'];
+const composeArgs = [
+  'compose',
+  '-p',
+  'nowtech-erp-e2e',
+  '-f',
+  'docker-compose.test.yml',
+];
 const databaseUrl =
   'postgresql://postgres:postgres@localhost:5433/nowtech_erp_test?schema=public';
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
@@ -46,7 +52,7 @@ try {
   process.exitCode = 1;
 } finally {
   console.log('\n[e2e] Stopping isolated PostgreSQL...');
-  const result = spawnSync('docker', [...composeArgs, 'down', '-v', '--remove-orphans'], {
+  const result = spawnSync('docker', [...composeArgs, 'down', '-v'], {
     stdio: 'inherit',
   });
 
