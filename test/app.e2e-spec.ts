@@ -1,3 +1,4 @@
+import type { Server } from 'node:http';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import * as request from 'supertest';
@@ -11,6 +12,7 @@ type HealthResponse = {
 
 describe('App (e2e)', () => {
   let app: INestApplication;
+  let httpServer: Server;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -28,6 +30,7 @@ describe('App (e2e)', () => {
     );
 
     await app.init();
+    httpServer = app.getHttpServer() as Server;
   });
 
   afterAll(async () => {
@@ -35,9 +38,7 @@ describe('App (e2e)', () => {
   });
 
   it('GET /api/health should return service status', async () => {
-    const response = await request(app.getHttpServer())
-      .get('/api/health')
-      .expect(200);
+    const response = await request(httpServer).get('/api/health').expect(200);
     const body = response.body as HealthResponse;
 
     expect(body).toEqual(
