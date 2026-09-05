@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import type { Server } from 'node:http';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import * as request from 'supertest';
@@ -27,6 +28,7 @@ type BranchResponse = {
 
 describe('Core API (e2e)', () => {
   let app: INestApplication;
+  let httpServer: Server;
   let prisma: PrismaService;
 
   beforeAll(async () => {
@@ -45,6 +47,7 @@ describe('Core API (e2e)', () => {
     );
 
     await app.init();
+    httpServer = app.getHttpServer() as Server;
     prisma = app.get(PrismaService);
   });
 
@@ -63,7 +66,7 @@ describe('Core API (e2e)', () => {
     email = 'e2e-user@example.com',
     name = 'E2E User',
   ): Promise<UserResponse> {
-    const response = await request(app.getHttpServer())
+    const response = await request(httpServer)
       .post('/api/users')
       .send({ name, email })
       .expect(201);
@@ -76,7 +79,7 @@ describe('Core API (e2e)', () => {
     slug = 'e2e-organization',
     name = 'E2E Organization',
   ): Promise<OrganizationResponse> {
-    const response = await request(app.getHttpServer())
+    const response = await request(httpServer)
       .post('/api/organizations')
       .send({ name, slug, userId })
       .expect(201);
@@ -86,7 +89,7 @@ describe('Core API (e2e)', () => {
 
   describe('POST /api/users', () => {
     it('creates a user', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .post('/api/users')
         .send({
           name: 'Elton Test',
@@ -112,7 +115,7 @@ describe('Core API (e2e)', () => {
     });
 
     it('returns 400 when payload is invalid', async () => {
-      await request(app.getHttpServer())
+      await request(httpServer)
         .post('/api/users')
         .send({ name: '', email: 'not-an-email' })
         .expect(400);
@@ -123,7 +126,7 @@ describe('Core API (e2e)', () => {
     it('returns 409 when email already exists', async () => {
       await createUser('duplicate@example.com');
 
-      await request(app.getHttpServer())
+      await request(httpServer)
         .post('/api/users')
         .send({ name: 'Another User', email: 'duplicate@example.com' })
         .expect(409);
@@ -136,7 +139,7 @@ describe('Core API (e2e)', () => {
     it('creates an organization and its active membership', async () => {
       const user = await createUser();
 
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .post('/api/organizations')
         .send({
           name: 'NowTech E2E',
@@ -175,7 +178,7 @@ describe('Core API (e2e)', () => {
     it('returns 400 when organization payload is invalid', async () => {
       const user = await createUser();
 
-      await request(app.getHttpServer())
+      await request(httpServer)
         .post('/api/organizations')
         .send({
           name: 'N',
@@ -189,7 +192,7 @@ describe('Core API (e2e)', () => {
     });
 
     it('returns 404 when user does not exist', async () => {
-      await request(app.getHttpServer())
+      await request(httpServer)
         .post('/api/organizations')
         .send({
           name: 'Missing User Org',
@@ -206,7 +209,7 @@ describe('Core API (e2e)', () => {
       const user = await createUser();
       await createOrganization(user.id, 'duplicate-org');
 
-      await request(app.getHttpServer())
+      await request(httpServer)
         .post('/api/organizations')
         .send({
           name: 'Another Organization',
@@ -225,7 +228,7 @@ describe('Core API (e2e)', () => {
       const user = await createUser();
       const organization = await createOrganization(user.id);
 
-      const response = await request(app.getHttpServer())
+      const response = await request(httpServer)
         .post(`/api/organizations/${organization.id}/branches`)
         .send({ name: 'Main Branch' })
         .expect(201);
@@ -245,7 +248,7 @@ describe('Core API (e2e)', () => {
       const user = await createUser();
       const organization = await createOrganization(user.id);
 
-      await request(app.getHttpServer())
+      await request(httpServer)
         .post(`/api/organizations/${organization.id}/branches`)
         .send({ name: '' })
         .expect(400);
@@ -254,7 +257,7 @@ describe('Core API (e2e)', () => {
     });
 
     it('returns 400 when organization id is not a UUID', async () => {
-      await request(app.getHttpServer())
+      await request(httpServer)
         .post('/api/organizations/not-a-uuid/branches')
         .send({ name: 'Main Branch' })
         .expect(400);
@@ -263,7 +266,7 @@ describe('Core API (e2e)', () => {
     });
 
     it('returns 404 when organization does not exist', async () => {
-      await request(app.getHttpServer())
+      await request(httpServer)
         .post(`/api/organizations/${randomUUID()}/branches`)
         .send({ name: 'Main Branch' })
         .expect(404);
@@ -276,12 +279,12 @@ describe('Core API (e2e)', () => {
       const organization = await createOrganization(user.id);
       const endpoint = `/api/organizations/${organization.id}/branches`;
 
-      await request(app.getHttpServer())
+      await request(httpServer)
         .post(endpoint)
         .send({ name: 'Main Branch' })
         .expect(201);
 
-      await request(app.getHttpServer())
+      await request(httpServer)
         .post(endpoint)
         .send({ name: 'Main Branch' })
         .expect(409);
@@ -303,12 +306,12 @@ describe('Core API (e2e)', () => {
         'Second Organization',
       );
 
-      await request(app.getHttpServer())
+      await request(httpServer)
         .post(`/api/organizations/${firstOrganization.id}/branches`)
         .send({ name: 'Central' })
         .expect(201);
 
-      await request(app.getHttpServer())
+      await request(httpServer)
         .post(`/api/organizations/${secondOrganization.id}/branches`)
         .send({ name: 'Central' })
         .expect(201);
