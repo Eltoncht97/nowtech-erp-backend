@@ -20,7 +20,11 @@ export class PrismaUserRepository extends UserRepository {
 
   create(data: CreateUserData): Promise<User> {
     return this.client.user.create({
-      data,
+      data: {
+        name: data.name,
+        email: data.email,
+        passwordHash: data.passwordHash,
+      },
     });
   }
 }

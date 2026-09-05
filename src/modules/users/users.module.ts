@@ -1,3 +1,4 @@
+import { SecurityModule } from 'src/core/security/security.module';
 import { Module } from '@nestjs/common';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
@@ -6,7 +7,7 @@ import { PrismaService } from 'src/core/database/prisma.service';
 import { PrismaUserRepository } from './repositories/prisma-user.repository';
 
 @Module({
-  imports: [],
+  imports: [SecurityModule],
   controllers: [UsersController],
   providers: [
     UsersService,

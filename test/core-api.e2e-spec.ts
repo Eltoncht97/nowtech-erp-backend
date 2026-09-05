@@ -1,3 +1,4 @@
+import { PasswordHasher } from '../src/core/security/password-hasher.service';
 import { randomUUID } from 'node:crypto';
 import type { Server } from 'node:http';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
@@ -11,7 +12,6 @@ type UserResponse = {
   id: string;
   name: string;
   email: string;
-  passwordHash: string | null;
 };
 
 type OrganizationResponse = {
@@ -25,6 +25,8 @@ type BranchResponse = {
   name: string;
   organizationId: string;
 };
+
+const password = 'A long e2e password';
 
 describe('Core API (e2e)', () => {
   let app: INestApplication;
@@ -68,7 +70,7 @@ describe('Core API (e2e)', () => {
   ): Promise<UserResponse> {
     const response = await request(httpServer)
       .post('/api/users')
-      .send({ name, email })
+      .send({ name, email, password })
       .expect(201);
 
     return response.body as UserResponse;
@@ -94,6 +96,7 @@ describe('Core API (e2e)', () => {
         .send({
           name: 'Elton Test',
           email: 'elton.e2e@example.com',
+          password,
         })
         .expect(201);
 
@@ -103,7 +106,6 @@ describe('Core API (e2e)', () => {
         expect.objectContaining({
           name: 'Elton Test',
           email: 'elton.e2e@example.com',
-          passwordHash: null,
         }),
       );
       expect(body.id).toEqual(expect.any(String));
@@ -112,6 +114,16 @@ describe('Core API (e2e)', () => {
         where: { email: 'elton.e2e@example.com' },
       });
       expect(persistedUser).not.toBeNull();
+      expect(body).not.toHaveProperty('password');
+      expect(body).not.toHaveProperty('passwordHash');
+      expect(Object.keys(body).sort()).toEqual(
+        ['id', 'name', 'email', 'createdAt', 'updatedAt'].sort(),
+      );
+      expect(persistedUser).not.toHaveProperty('password');
+      expect(persistedUser?.passwordHash).not.toBe(password);
+      await expect(
+        app.get(PasswordHasher).verify(password, persistedUser?.passwordHash),
+      ).resolves.toBe(true);
     });
 
     it('returns 400 when payload is invalid', async () => {
@@ -123,12 +135,55 @@ describe('Core API (e2e)', () => {
       expect(await prisma.user.count()).toBe(0);
     });
 
+    it.each([undefined, null, 123, '', 'too short', 'a'.repeat(129)])(
+      'rejects invalid password %s',
+      async (invalidPassword) => {
+        await request(httpServer)
+          .post('/api/users')
+          .send({
+            name: 'Test User',
+            email: 'invalid@example.com',
+            password: invalidPassword,
+          })
+          .expect(400);
+        expect(await prisma.user.count()).toBe(0);
+      },
+    );
+
+    it('rejects a client-supplied password hash', async () => {
+      await request(httpServer)
+        .post('/api/users')
+        .send({
+          name: 'Test User',
+          email: 'invalid@example.com',
+          password,
+          passwordHash: 'injected',
+        })
+        .expect(400);
+      expect(await prisma.user.count()).toBe(0);
+    });
+
+    it('preserves legacy users without a password', async () => {
+      const legacy = await prisma.user.create({
+        data: { name: 'Legacy User', email: 'legacy@example.com' },
+      });
+      await createOrganization(legacy.id);
+      expect(
+        (await prisma.user.findUniqueOrThrow({ where: { id: legacy.id } }))
+          .passwordHash,
+      ).toBeNull();
+    });
+
     it('returns 409 when email already exists', async () => {
       await createUser('duplicate@example.com');
 
       await request(httpServer)
         .post('/api/users')
-        .send({ name: 'Another User', email: 'duplicate@example.com' })
+        .send({
+          name: 'Another User',
+          email: 'duplicate@example.com',
+          password,
+        })
         .expect(409);
 
       expect(await prisma.user.count()).toBe(1);
