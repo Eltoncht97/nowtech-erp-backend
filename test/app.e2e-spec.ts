@@ -1,6 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import request = require('supertest');
+import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 
 type HealthResponse = {
