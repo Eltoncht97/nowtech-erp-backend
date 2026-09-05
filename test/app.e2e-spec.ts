@@ -1,8 +1,13 @@
-import { ValidationPipe } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
+
+type HealthResponse = {
+  status: string;
+  service: string;
+  timestamp: string;
+};
 
 describe('App (e2e)', () => {
   let app: INestApplication;
@@ -30,14 +35,17 @@ describe('App (e2e)', () => {
   });
 
   it('GET /api/health should return service status', async () => {
-    const response = await request(app.getHttpServer()).get('/api/health').expect(200);
+    const response = await request(app.getHttpServer())
+      .get('/api/health')
+      .expect(200);
+    const body = response.body as HealthResponse;
 
-    expect(response.body).toEqual(
+    expect(body).toEqual(
       expect.objectContaining({
         status: 'ok',
         service: 'nowtech-erp-backend',
       }),
     );
-    expect(response.body.timestamp).toEqual(expect.any(String));
+    expect(body.timestamp).toEqual(expect.any(String));
   });
 });
