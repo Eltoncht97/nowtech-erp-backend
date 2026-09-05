@@ -89,6 +89,8 @@ describe('OrganizationsService', () => {
 
     await expect(service.create(dto)).rejects.toThrow(NotFoundException);
 
+    expect(findUserByIdMock).toHaveBeenCalledWith(dto.userId);
+    expect(findOrganizationBySlugMock).not.toHaveBeenCalled();
     expect(createOrganizationMock).not.toHaveBeenCalled();
     expect(createMembershipMock).not.toHaveBeenCalled();
   });
@@ -101,7 +103,6 @@ describe('OrganizationsService', () => {
 
     expect(findUserByIdMock).toHaveBeenCalledWith(dto.userId);
     expect(findOrganizationBySlugMock).toHaveBeenCalledWith(dto.slug);
-
     expect(createOrganizationMock).not.toHaveBeenCalled();
     expect(createMembershipMock).not.toHaveBeenCalled();
   });
@@ -114,17 +115,38 @@ describe('OrganizationsService', () => {
 
     const result = await service.create(dto);
 
+    expect(findUserByIdMock).toHaveBeenCalledWith(dto.userId);
+    expect(findOrganizationBySlugMock).toHaveBeenCalledWith(dto.slug);
     expect(createOrganizationMock).toHaveBeenCalledWith({
       name: dto.name,
       slug: dto.slug,
     });
-
     expect(createMembershipMock).toHaveBeenCalledWith({
       userId: dto.userId,
       organizationId: mockOrganization.id,
       status: MembershipStatus.ACTIVE,
     });
-
     expect(result).toEqual(mockOrganization);
+  });
+
+  it('should propagate error when membership creation fails', async () => {
+    const membershipError = new Error('Membership creation failed');
+
+    findUserByIdMock.mockResolvedValue(mockUser);
+    findOrganizationBySlugMock.mockResolvedValue(null);
+    createOrganizationMock.mockResolvedValue(mockOrganization);
+    createMembershipMock.mockRejectedValue(membershipError);
+
+    await expect(service.create(dto)).rejects.toThrow(membershipError);
+
+    expect(createOrganizationMock).toHaveBeenCalledWith({
+      name: dto.name,
+      slug: dto.slug,
+    });
+    expect(createMembershipMock).toHaveBeenCalledWith({
+      userId: dto.userId,
+      organizationId: mockOrganization.id,
+      status: MembershipStatus.ACTIVE,
+    });
   });
 });
