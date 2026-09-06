@@ -1,3 +1,4 @@
+import { needsRehash } from 'argon2';
 import { PasswordHasher } from './password-hasher.service';
 
 describe('PasswordHasher', () => {
@@ -6,6 +7,14 @@ describe('PasswordHasher', () => {
     const password = ' Una contraseña 🔐 larga ';
     const first = await hasher.hash(password);
     const second = await hasher.hash(password);
+    expect(first).toMatch(/^\$argon2id\$/);
+    expect(
+      needsRehash(first, {
+        memoryCost: 19 * 1024,
+        timeCost: 2,
+        parallelism: 1,
+      }),
+    ).toBe(false);
     expect(first).not.toBe(second);
     expect(first).not.toContain(password);
     await expect(hasher.verify(password, first)).resolves.toBe(true);
@@ -19,8 +28,8 @@ describe('PasswordHasher', () => {
     undefined,
     '',
     'plaintext',
-    'scrypt$v1$999999999$8$1$aa$bb',
-    `scrypt$v1$131072$8$1$${'a'.repeat(32)}$${'z'.repeat(128)}`,
+    '$argon2id$',
+    '$argon2id$v=19$m=19456,t=2,p=1$invalid$invalid',
   ])('rejects missing or malformed stored hashes: %s', async (value) => {
     await expect(hasher.verify('password', value)).resolves.toBe(false);
   });

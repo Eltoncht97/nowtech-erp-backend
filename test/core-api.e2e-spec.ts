@@ -135,7 +135,7 @@ describe('Core API (e2e)', () => {
       expect(await prisma.user.count()).toBe(0);
     });
 
-    it.each([undefined, null, 123, '', 'too short', 'a'.repeat(129)])(
+    it.each([undefined, null, 123, '', 'a'.repeat(7), 'a'.repeat(129)])(
       'rejects invalid password %s',
       async (invalidPassword) => {
         await request(httpServer)
@@ -147,6 +147,28 @@ describe('Core API (e2e)', () => {
           })
           .expect(400);
         expect(await prisma.user.count()).toBe(0);
+      },
+    );
+
+    it.each(['a'.repeat(8), '🔐'.repeat(8), 'a'.repeat(128)])(
+      'accepts passwords at the length boundaries, including Unicode: %s',
+      async (validPassword) => {
+        const response = await request(httpServer)
+          .post('/api/users')
+          .send({
+            name: 'Test User',
+            email: 'boundary@example.com',
+            password: validPassword,
+          })
+          .expect(201);
+        expect(response.body).not.toHaveProperty('passwordHash');
+        expect(response.body).not.toHaveProperty('password');
+        const user = await prisma.user.findUniqueOrThrow({
+          where: { email: 'boundary@example.com' },
+        });
+        await expect(
+          app.get(PasswordHasher).verify(validPassword, user.passwordHash),
+        ).resolves.toBe(true);
       },
     );
 

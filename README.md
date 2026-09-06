@@ -38,18 +38,17 @@ Business modules from the personal finance project are intentionally not copied 
 
 ## User passwords
 
-`POST /api/users` requires `name`, `email` and `password` (15–128 characters).
+`POST /api/users` requires `name`, `email` and `password` (8–128 characters).
 Passwords preserve whitespace and Unicode; no composition rules or default passwords
 are applied. Responses contain only `id`, `name`, `email`, `createdAt`, and `updatedAt`.
 
 The reusable `SecurityModule` exports `PasswordHasher.hash` and `verify`. It uses
-Node's asynchronous scrypt with a random 16-byte salt, a 64-byte derived key,
-and N=131072, r=8, p=1 (~128 MiB per operation; 256 MiB maxmem). The stored format
-includes a version and fixed parameters. Verification rejects absent or malformed
-hashes and compares derived keys in constant time. This uses Node's built-in crypto
-without an additional native dependency, following the
-[OWASP scrypt configuration](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#scrypt).
-Capacity planning should account for the memory cost of concurrent hashing.
+the `argon2` library with Argon2id, `memoryCost: 19 * 1024` KiB (19 MiB),
+`timeCost: 2`, and `parallelism: 1`, matching the
+[OWASP minimum configuration](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#argon2id).
+The library generates salts and encodes hashes. Verification returns false for
+missing or malformed hashes. `PasswordHasher.verify(password, encodedHash)` delegates
+to the library's `verify(encodedHash, password)`.
 
 Existing nullable `passwordHash` values remain unchanged; no migration is required.
 Login, JWT, password recovery, and invitations are outside this change.
