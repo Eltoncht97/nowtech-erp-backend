@@ -71,3 +71,40 @@ HTTP 403 with `User has no active organizations`, without issuing a token.
 Login lists organization options; it does not select one or grant branch access.
 JWT guards, authorization on other endpoints, refresh tokens and logout are not
 implemented yet. E2E tests supply a separate test signing key.
+
+## Organization onboarding and roles
+
+`POST /api/onboarding` is public and accepts:
+
+```json
+{
+  "name": "Founder",
+  "email": "founder@example.com",
+  "password": "your password",
+  "organization": { "name": "Company", "slug": "company" }
+}
+```
+
+User and nested organization fields use the same validation as their creation
+endpoints. Password hashing happens before a single transaction creates the user,
+organization, and ACTIVE/OWNER membership. Failure rolls back the transaction;
+email and slug conflicts return HTTP 409, including concurrent uniqueness conflicts.
+After commit, the endpoint returns HTTP 201 with `{ accessToken, organizations }`,
+using the same 30-minute JWT configuration as login and only the newly created
+organization's `{ id, name }`. No branch is created.
+
+`MembershipRole` is required and organization-specific: OWNER, ADMIN, MEMBER.
+Existing founder memberships migrate to OWNER; future writes must provide a role
+explicitly (no database default). The existing organization creation endpoint also
+creates an OWNER. Apply the new migration before running the updated application:
+
+```bash
+npx prisma migrate deploy
+npm run prisma:generate
+```
+
+The migration preserves existing rows and does not change membership status.
+Platform administrators, invitations, role-management endpoints and authorization
+guards remain outside this implementation. If token signing fails after commit,
+the account and organization remain created; the user can log in once signing is
+available again.

@@ -6,6 +6,7 @@ import { CreateOrganizationDto } from './dto/create-organization.dto';
 import {
   Membership,
   MembershipStatus,
+  MembershipRole,
   Organization,
   User,
 } from '@prisma/client';
@@ -47,6 +48,7 @@ describe('OrganizationsService', () => {
     userId: mockUser.id,
     organizationId: mockOrganization.id,
     status: MembershipStatus.ACTIVE,
+    role: MembershipRole.OWNER,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -126,6 +128,7 @@ describe('OrganizationsService', () => {
       userId: dto.userId,
       organizationId: mockOrganization.id,
       status: MembershipStatus.ACTIVE,
+      role: MembershipRole.OWNER,
     });
     expect(result).toEqual(mockOrganization);
   });
@@ -148,6 +151,7 @@ describe('OrganizationsService', () => {
       userId: dto.userId,
       organizationId: mockOrganization.id,
       status: MembershipStatus.ACTIVE,
+      role: MembershipRole.OWNER,
     });
   });
 });

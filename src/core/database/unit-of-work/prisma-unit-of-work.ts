@@ -1,3 +1,5 @@
+import { Prisma } from '@prisma/client';
+import { UniqueConflictError } from '../unique-conflict.error';
 import { Injectable } from '@nestjs/common';
 import { UnitOfWork } from './unit-of-work';
 import { PrismaService } from '../prisma.service';
@@ -15,16 +17,31 @@ export class PrismaUnitOfWork extends UnitOfWork {
   execute<T>(
     work: (repositories: UnitOfWorkRepositories) => Promise<T>,
   ): Promise<T> {
-    return this.prisma.$transaction(async (tx) => {
-      const repositories = {
-        organizations: new PrismaOrganizationRepository(tx),
+    return this.prisma
+      .$transaction(async (tx) => {
+        const repositories = {
+          organizations: new PrismaOrganizationRepository(tx),
 
-        memberships: new PrismaMembershipRepository(tx),
+          memberships: new PrismaMembershipRepository(tx),
 
-        users: new PrismaUserRepository(tx),
-      };
+          users: new PrismaUserRepository(tx),
+        };
 
-      return work(repositories);
-    });
+        return work(repositories);
+      })
+      .catch((error: unknown) => {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2002'
+        ) {
+          const target: unknown = error.meta?.target;
+          if (Array.isArray(target)) {
+            if (target.includes('email'))
+              throw new UniqueConflictError('email');
+            if (target.includes('slug')) throw new UniqueConflictError('slug');
+          }
+        }
+        throw error;
+      });
   }
 }

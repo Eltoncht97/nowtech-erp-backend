@@ -4,7 +4,7 @@ import type { Server } from 'node:http';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import * as request from 'supertest';
-import { MembershipStatus } from '@prisma/client';
+import { MembershipRole, MembershipStatus } from '@prisma/client';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/core/database/prisma.service';
 
@@ -248,6 +248,7 @@ describe('Core API (e2e)', () => {
           organizationId: body.id,
           userId: user.id,
           status: MembershipStatus.ACTIVE,
+          role: MembershipRole.OWNER,
         }),
       );
     });

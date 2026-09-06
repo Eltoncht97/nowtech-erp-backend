@@ -2,7 +2,7 @@ import type { Server } from 'node:http';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
-import { MembershipStatus } from '@prisma/client';
+import { MembershipRole, MembershipStatus } from '@prisma/client';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/core/database/prisma.service';
@@ -65,7 +65,11 @@ describe('Auth login (e2e)', () => {
     status: MembershipStatus,
   ) {
     return prisma.organization.create({
-      data: { name, slug, memberships: { create: { userId, status } } },
+      data: {
+        name,
+        slug,
+        memberships: { create: { userId, status, role: MembershipRole.OWNER } },
+      },
     });
   }
 
@@ -109,6 +113,7 @@ describe('Auth login (e2e)', () => {
         userId: other.id,
         organizationId: alpha.id,
         status: MembershipStatus.ACTIVE,
+        role: MembershipRole.OWNER,
       },
     });
 

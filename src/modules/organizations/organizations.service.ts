@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UnitOfWork } from 'src/core/database/unit-of-work/unit-of-work';
-import { MembershipStatus } from '@prisma/client';
+import { MembershipRole, MembershipStatus } from '@prisma/client';
 
 @Injectable()
 export class OrganizationsService {
@@ -35,6 +35,7 @@ export class OrganizationsService {
           userId,
           organizationId: organization.id,
           status: MembershipStatus.ACTIVE,
+          role: MembershipRole.OWNER,
         });
 
         return organization;

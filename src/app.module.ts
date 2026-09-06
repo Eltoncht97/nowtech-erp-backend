@@ -1,3 +1,4 @@
+import { OnboardingModule } from './modules/onboarding/onboarding.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -21,6 +22,7 @@ import { BranchesModule } from './modules/branches/branches.module';
     UsersModule,
     BranchesModule,
     AuthModule,
+    OnboardingModule,
   ],
 })
 export class AppModule {}

@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { MembershipStatus } from '@prisma/client';
+import { MembershipRole, MembershipStatus } from '@prisma/client';
 import { PrismaService } from '../src/core/database/prisma.service';
 import { PrismaUnitOfWork } from '../src/core/database/unit-of-work/prisma-unit-of-work';
 
@@ -38,6 +38,7 @@ describe('PrismaUnitOfWork (integration)', () => {
           organizationId: organization.id,
           userId: randomUUID(),
           status: MembershipStatus.ACTIVE,
+          role: MembershipRole.OWNER,
         });
       }),
     ).rejects.toThrow();
@@ -69,6 +70,7 @@ describe('PrismaUnitOfWork (integration)', () => {
           organizationId: createdOrganization.id,
           userId: user.id,
           status: MembershipStatus.ACTIVE,
+          role: MembershipRole.OWNER,
         });
 
         return createdOrganization;
@@ -93,6 +95,7 @@ describe('PrismaUnitOfWork (integration)', () => {
         organizationId: organization.id,
         userId: user.id,
         status: MembershipStatus.ACTIVE,
+        role: MembershipRole.OWNER,
       }),
     );
   });
