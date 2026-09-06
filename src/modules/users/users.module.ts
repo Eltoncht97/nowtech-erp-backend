@@ -8,6 +8,7 @@ import { PrismaUserRepository } from './repositories/prisma-user.repository';
 
 @Module({
   imports: [SecurityModule],
+  exports: [UserRepository],
   controllers: [UsersController],
   providers: [
     UsersService,

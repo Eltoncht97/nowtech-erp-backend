@@ -69,6 +69,7 @@ describe('OrganizationsService', () => {
         create: createOrganizationMock,
       },
       memberships: {
+        findActiveOrganizationsByUserId: jest.fn(),
         create: createMembershipMock,
       },
     };

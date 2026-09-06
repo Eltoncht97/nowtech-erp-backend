@@ -1,3 +1,4 @@
+import { AuthModule } from './modules/auth/auth.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './core/database/database.module';
@@ -19,6 +20,7 @@ import { BranchesModule } from './modules/branches/branches.module';
     OrganizationsModule,
     UsersModule,
     BranchesModule,
+    AuthModule,
   ],
 })
 export class AppModule {}

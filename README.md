@@ -51,4 +51,23 @@ missing or malformed hashes. `PasswordHasher.verify(password, encodedHash)` dele
 to the library's `verify(encodedHash, password)`.
 
 Existing nullable `passwordHash` values remain unchanged; no migration is required.
-Login, JWT, password recovery, and invitations are outside this change.
+Password recovery and invitations are not implemented.
+
+## Login
+
+Set `JWT_SECRET` to a strong random secret in your local environment before starting
+the application (for example, generate one with `openssl rand -hex 32`). There is
+no default signing key. Existing `.env` files are not modified automatically.
+
+`POST /api/auth/login` accepts `{ "email": "user@example.com", "password": "your password" }`.
+Successful responses are HTTP 200 with `{ accessToken, organizations }`.
+Organizations contain only `{ id, name }`, sorted by name then id, and include only
+the user's ACTIVE memberships. The JWT contains `sub` (user id), `iat`, and `exp`,
+with a lifetime of 30 minutes; organizations and credentials are not token claims.
+
+Invalid credentials (including users without a password) return HTTP 401 with
+`Invalid credentials`. Valid credentials without active organizations return
+HTTP 403 with `User has no active organizations`, without issuing a token.
+Login lists organization options; it does not select one or grant branch access.
+JWT guards, authorization on other endpoints, refresh tokens and logout are not
+implemented yet. E2E tests supply a separate test signing key.
